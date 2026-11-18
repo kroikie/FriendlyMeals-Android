@@ -46,7 +46,7 @@ class AIRemoteDataSource @Inject constructor(
 
     private val hybridGenerativeModel = aiModel.generativeModel(
         modelName = remoteConfig.getString(HYBRID_CLOUD_MODEL_KEY),
-        onDeviceConfig = OnDeviceConfig(mode = InferenceMode.PREFER_IN_CLOUD)
+        onDeviceConfig = OnDeviceConfig(mode = InferenceMode.ONLY_ON_DEVICE)
     )
 
     private val templateGenerativeModel = aiModel.templateGenerativeModel()
@@ -190,6 +190,38 @@ class AIRemoteDataSource @Inject constructor(
         return (part as? InlineDataPart)?.inlineData
     }
 
+    suspend fun generateInstructionsSpeech(instructions: String): ByteArray? {
+        val modelName = remoteConfig.getString(TTS_MODEL_NAME_KEY).ifEmpty { DEFAULT_TTS_MODEL }
+        val promptTemplate = remoteConfig.getString(TTS_PROMPT_KEY).ifEmpty { DEFAULT_TTS_PROMPT }
+        val promptText = promptTemplate.replace("{{instructions}}", instructions)
+        val voiceName = remoteConfig.getString(TTS_VOICE_KEY).ifEmpty { DEFAULT_TTS_VOICE }
+
+        val ttsModel = aiModel.generativeModel(
+            modelName = modelName,
+            generationConfig = generationConfig {
+                responseModalities = listOf(ResponseModality.AUDIO)
+                speechConfig = SpeechConfig(voice = Voice(voiceName))
+            }
+        )
+
+        return try {
+            val response = ttsModel.generateContent(
+                content {
+                    text(promptText)
+                }
+            )
+
+            val audioPart = response.inlineDataParts.firstOrNull()
+                ?: response.candidates.firstOrNull()?.content?.parts
+                    ?.filterIsInstance<InlineDataPart>()?.firstOrNull()
+
+            audioPart?.inlineData
+        } catch (e: Exception) {
+            Log.e(TAG, "Error generating speech for instructions", e)
+            null
+        }
+    }
+
     suspend fun loadOnDeviceModel() {
         when (hybridGenerativeModel.onDeviceExtension?.checkStatus()) {
             UNAVAILABLE -> {
@@ -232,6 +264,12 @@ class AIRemoteDataSource @Inject constructor(
         private const val RECIPE_PAIRING_KEY = "recipe_pairing"
         private const val VOICE_PROFILE_KEY = "recipe_pairing_voice_profile"
         private const val TTS_MODEL_KEY = "tts_model"
+        private const val TTS_MODEL_NAME_KEY = "recipe_tts_model_name"
+        private const val DEFAULT_TTS_MODEL = "gemini-3.1-flash-tts-preview"
+        private const val TTS_PROMPT_KEY = "recipe_tts_prompt"
+        private const val DEFAULT_TTS_PROMPT = "Please read aloud the following recipe instructions clearly and naturally:\n\n{{instructions}}"
+        private const val TTS_VOICE_KEY = "recipe_tts_voice"
+        private const val DEFAULT_TTS_VOICE = "Puck"
 
         //Template input fields
         private const val IMAGE_DATA_FIELD = "imageData"

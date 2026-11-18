@@ -55,4 +55,16 @@ The user will stream real-time video of their cooking and ask questions like "Is
 Confirm or deny accurately based on the recipe context and the video content. Be concise and helpful.
 If the user asks you to add an ingredient or item to their grocery list or shopping list, call the addIngredientToGroceryList function.</value>
     </entry>
+    <entry>
+        <key>recipe_tts_model_name</key>
+        <value>gemini-3.1-flash-tts-preview</value>
+    </entry>
+    <entry>
+        <key>recipe_tts_prompt</key>
+        <value>Please read aloud the following recipe instructions clearly and naturally:\n\n{{instructions}}</value>
+    </entry>
+    <entry>
+        <key>recipe_tts_voice</key>
+        <value>Puck</value>
+    </entry>
 </defaults>

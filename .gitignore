@@ -16,3 +16,6 @@ google-services.json
 /build
 app/build
 local.properties
+.firebaserc
+.kotlin/
+hoodie_script/

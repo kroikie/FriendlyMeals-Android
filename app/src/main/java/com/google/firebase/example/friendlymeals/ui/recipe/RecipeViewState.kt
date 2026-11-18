@@ -10,10 +10,21 @@ sealed interface RecipeAudioState {
     data class Error(val message: String) : RecipeAudioState
 }
 
+enum class AudioState {
+    IDLE,
+    GENERATING,
+    PLAYING,
+    PAUSED,
+    READY,
+    ERROR
+}
+
 data class RecipeViewState(
     val recipeId: String = "",
     val recipe: Recipe = Recipe(),
     val favorite: Boolean = false,
     val rating: Int = 0,
-    val audioState: RecipeAudioState = RecipeAudioState.Idle
+    val audioState: RecipeAudioState = RecipeAudioState.Idle,
+    val instructionsAudioState: AudioState = AudioState.IDLE,
+    val audioErrorMessage: String? = null
 )

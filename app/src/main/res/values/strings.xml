@@ -81,4 +81,10 @@
     <string name="recipe_pairing_playing">Playing pairing guide • Tap to pause</string>
     <string name="recipe_pairing_paused">Paused • Tap to resume</string>
     <string name="recipe_pairing_retry">Error playing audio • Tap to retry</string>
+    <string name="recipe_speak_instructions">Speak</string>
+    <string name="recipe_speaking_generating">Generating…</string>
+    <string name="recipe_play_audio">Play</string>
+    <string name="recipe_pause_audio">Pause</string>
+    <string name="recipe_restart_audio">Restart</string>
+    <string name="recipe_audio_error">Failed to generate audio</string>
 </resources>

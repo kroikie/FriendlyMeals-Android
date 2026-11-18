@@ -9,6 +9,7 @@ import com.google.firebase.example.friendlymeals.data.repository.AIRepository
 import com.google.firebase.example.friendlymeals.data.repository.AuthRepository
 import com.google.firebase.example.friendlymeals.data.repository.DatabaseRepository
 import com.google.firebase.example.friendlymeals.ui.shared.AudioComponent
+import com.google.firebase.example.friendlymeals.ui.shared.AudioPlayerHelper
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -20,7 +21,8 @@ class RecipeViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val authRepository: AuthRepository,
     private val databaseRepository: DatabaseRepository,
-    private val aiRepository: AIRepository
+    private val aiRepository: AIRepository,
+    private val audioPlayerHelper: AudioPlayerHelper
 ) : MainViewModel() {
     private val recipeRoute = savedStateHandle.toRoute<RecipeRoute>()
     private val recipeId: String = recipeRoute.recipeId
@@ -34,6 +36,7 @@ class RecipeViewModel @Inject constructor(
     private val audioComponent = AudioComponent()
     private var cachedAudioData: ByteArray? = null
     private var cachedPairingText: String? = null
+    private var cachedInstructionsAudioBytes: ByteArray? = null
 
     init {
         loadRecipe()
@@ -42,7 +45,7 @@ class RecipeViewModel @Inject constructor(
     fun loadRecipe() {
         launchCatching {
             val recipe = databaseRepository.getRecipe(recipeId)
-            _recipeViewState.value = RecipeViewState(
+            _recipeViewState.value = _recipeViewState.value.copy(
                 recipeId = recipeId,
                 recipe = recipe,
                 favorite = loadFavorite(),
@@ -53,6 +56,9 @@ class RecipeViewModel @Inject constructor(
     }
 
     fun onPairingClick() {
+        if (_recipeViewState.value.instructionsAudioState == AudioState.PLAYING) {
+            pauseAudio()
+        }
         when (_recipeViewState.value.audioState) {
             is RecipeAudioState.Playing -> {
                 audioComponent.pause()
@@ -177,8 +183,103 @@ class RecipeViewModel @Inject constructor(
         }
     }
 
+    fun speakInstructions() {
+        val currentAudioState = _recipeViewState.value.instructionsAudioState
+        if (currentAudioState == AudioState.PLAYING) {
+            pauseAudio()
+            return
+        }
+
+        pausePairingIfPlaying()
+
+        val cached = cachedInstructionsAudioBytes
+        if (cached != null) {
+            playAudio()
+            return
+        }
+
+        val instructions = _recipeViewState.value.recipe.instructions
+        if (instructions.isBlank()) return
+
+        _recipeViewState.value = _recipeViewState.value.copy(
+            instructionsAudioState = AudioState.GENERATING,
+            audioErrorMessage = null
+        )
+
+        launchCatching {
+            val audioBytes = aiRepository.generateInstructionsSpeech(instructions)
+            if (audioBytes == null || audioBytes.isEmpty()) {
+                _recipeViewState.value = _recipeViewState.value.copy(
+                    instructionsAudioState = AudioState.ERROR,
+                    audioErrorMessage = "Failed to generate audio"
+                )
+            } else {
+                cachedInstructionsAudioBytes = audioBytes
+                playAudioInternal(audioBytes)
+            }
+        }
+    }
+
+    fun playAudio() {
+        val bytes = cachedInstructionsAudioBytes ?: return
+        pausePairingIfPlaying()
+        if (_recipeViewState.value.instructionsAudioState == AudioState.PAUSED) {
+            audioPlayerHelper.resume()
+            _recipeViewState.value = _recipeViewState.value.copy(instructionsAudioState = AudioState.PLAYING)
+        } else {
+            playAudioInternal(bytes)
+        }
+    }
+
+    fun restartAudio() {
+        val bytes = cachedInstructionsAudioBytes ?: return
+        pausePairingIfPlaying()
+        if (audioPlayerHelper.isPlaying || _recipeViewState.value.instructionsAudioState == AudioState.PAUSED) {
+            audioPlayerHelper.restart()
+            _recipeViewState.value = _recipeViewState.value.copy(instructionsAudioState = AudioState.PLAYING)
+        } else {
+            playAudioInternal(bytes)
+        }
+    }
+
+    private fun playAudioInternal(bytes: ByteArray) {
+        audioPlayerHelper.play(bytes) {
+            _recipeViewState.value = _recipeViewState.value.copy(instructionsAudioState = AudioState.READY)
+        }
+        _recipeViewState.value = _recipeViewState.value.copy(instructionsAudioState = AudioState.PLAYING)
+    }
+
+    fun pauseAudio() {
+        audioPlayerHelper.pause()
+        _recipeViewState.value = _recipeViewState.value.copy(instructionsAudioState = AudioState.PAUSED)
+    }
+
+    fun stopAudio() {
+        audioComponent.stop()
+        if (_recipeViewState.value.audioState is RecipeAudioState.Playing ||
+            _recipeViewState.value.audioState is RecipeAudioState.Paused
+        ) {
+            _recipeViewState.value = _recipeViewState.value.copy(audioState = RecipeAudioState.Idle)
+        }
+
+        audioPlayerHelper.stop()
+        if (_recipeViewState.value.instructionsAudioState == AudioState.PLAYING ||
+            _recipeViewState.value.instructionsAudioState == AudioState.PAUSED
+        ) {
+            _recipeViewState.value = _recipeViewState.value.copy(instructionsAudioState = AudioState.READY)
+        }
+    }
+
+    private fun pausePairingIfPlaying() {
+        if (_recipeViewState.value.audioState is RecipeAudioState.Playing) {
+            audioComponent.pause()
+            _recipeViewState.value = _recipeViewState.value.copy(audioState = RecipeAudioState.Paused)
+        }
+    }
+
     override fun onCleared() {
         audioComponent.release()
+        audioPlayerHelper.release()
         super.onCleared()
     }
 }

@@ -13,6 +13,7 @@ import androidx.core.content.ContextCompat
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -32,6 +33,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -71,6 +73,12 @@ fun RecipeScreen(
     val groceryListToast = stringResource(R.string.added_to_grocery_list_toast)
     val context = LocalContext.current
 
+    DisposableEffect(Unit) {
+        onDispose {
+            viewModel.stopAudio()
+        }
+    }
+
     RecipeScreenContent(
         navigateBack = navigateBack,
         toggleFavorite = viewModel::toggleFavorite,
@@ -84,7 +92,11 @@ fun RecipeScreen(
                 Toast.makeText(context, groceryListToast, Toast.LENGTH_SHORT).show()
             }
         },
-        onPairingClick = viewModel::onPairingClick
+        onPairingClick = viewModel::onPairingClick,
+        onSpeakInstructions = viewModel::speakInstructions,
+        onPlayAudio = viewModel::playAudio,
+        onPauseAudio = viewModel::pauseAudio,
+        onRestartAudio = viewModel::restartAudio
     )
 }
 
@@ -96,7 +108,11 @@ fun RecipeScreenContent(
     recipeViewState: RecipeViewState,
     onLiveAssistantClick: () -> Unit = {},
     onAddIngredientsToGrocery: () -> Unit = {},
-    onPairingClick: () -> Unit = {}
+    onPairingClick: () -> Unit = {},
+    onSpeakInstructions: () -> Unit = {},
+    onPlayAudio: () -> Unit = {},
+    onPauseAudio: () -> Unit = {},
+    onRestartAudio: () -> Unit = {}
 ) {
     val context = LocalContext.current
     val multiplePermissionsLauncher = rememberLauncherForActivityResult(
@@ -343,12 +359,28 @@ fun RecipeScreenContent(
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             Column(modifier = Modifier.padding(16.dp)) {
-                                Text(
-                                    text = stringResource(id = R.string.recipe_instructions_title),
-                                    fontSize = 18.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = Teal
-                                )
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        text = stringResource(id = R.string.recipe_instructions_title),
+                                        fontSize = 18.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = Teal
+                                    )
+
+                                    if (recipeViewState.recipe.instructions.isNotBlank()) {
+                                        SpeakInstructionsButton(
+                                            audioState = recipeViewState.instructionsAudioState,
+                                            onSpeak = onSpeakInstructions,
+                                            onPlay = onPlayAudio,
+                                            onPause = onPauseAudio,
+                                            onRestart = onRestartAudio
+                                        )
+                                    }
+                                }
                                 Spacer(modifier = Modifier.height(12.dp))
 
                                 BasicRichText {
@@ -436,6 +468,205 @@ fun InfoCard(
             fontWeight = FontWeight.Bold,
             color = TextColor
         )
+    }
+}
+
+@Composable
+fun SpeakInstructionsButton(
+    audioState: AudioState,
+    onSpeak: () -> Unit,
+    onPlay: () -> Unit,
+    onPause: () -> Unit,
+    onRestart: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    when (audioState) {
+        AudioState.IDLE -> {
+            Button(
+                onClick = onSpeak,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = LightTeal,
+                    contentColor = Teal
+                ),
+                shape = RoundedCornerShape(20.dp),
+                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
+                modifier = modifier.height(36.dp)
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_volume_up),
+                        contentDescription = stringResource(R.string.recipe_speak_instructions),
+                        tint = Teal,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Text(
+                        text = stringResource(R.string.recipe_speak_instructions),
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Teal
+                    )
+                }
+            }
+        }
+        AudioState.GENERATING -> {
+            Button(
+                onClick = {},
+                enabled = false,
+                colors = ButtonDefaults.buttonColors(
+                    disabledContainerColor = LightTeal,
+                    disabledContentColor = Teal
+                ),
+                shape = RoundedCornerShape(20.dp),
+                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
+                modifier = modifier.height(36.dp)
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(16.dp),
+                        color = Teal,
+                        strokeWidth = 2.dp
+                    )
+                    Text(
+                        text = stringResource(R.string.recipe_speaking_generating),
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Teal
+                    )
+                }
+            }
+        }
+        AudioState.PLAYING, AudioState.PAUSED, AudioState.READY -> {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = modifier
+            ) {
+                if (audioState == AudioState.PLAYING) {
+                    Button(
+                        onClick = onPause,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Teal,
+                            contentColor = Color.White
+                        ),
+                        shape = RoundedCornerShape(20.dp),
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
+                        modifier = Modifier.height(36.dp)
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            Icon(
+                                painter = painterResource(R.drawable.ic_pause),
+                                contentDescription = stringResource(R.string.recipe_pause_audio),
+                                tint = Color.White,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Text(
+                                text = stringResource(R.string.recipe_pause_audio),
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = Color.White
+                            )
+                        }
+                    }
+                } else {
+                    Button(
+                        onClick = onPlay,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = LightTeal,
+                            contentColor = Teal
+                        ),
+                        shape = RoundedCornerShape(20.dp),
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
+                        modifier = Modifier.height(36.dp)
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            Icon(
+                                painter = painterResource(R.drawable.ic_play),
+                                contentDescription = stringResource(R.string.recipe_play_audio),
+                                tint = Teal,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Text(
+                                text = stringResource(R.string.recipe_play_audio),
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = Teal
+                            )
+                        }
+                    }
+                }
+
+                Button(
+                    onClick = onRestart,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = LightTeal,
+                        contentColor = Teal
+                    ),
+                    shape = RoundedCornerShape(20.dp),
+                    contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp),
+                    modifier = Modifier.height(36.dp)
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_restart),
+                            contentDescription = stringResource(R.string.recipe_restart_audio),
+                            tint = Teal,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Text(
+                            text = stringResource(R.string.recipe_restart_audio),
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = Teal
+                        )
+                    }
+                }
+            }
+        }
+        AudioState.ERROR -> {
+            Button(
+                onClick = onSpeak,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFFFFEBEE),
+                    contentColor = Color(0xFFC62828)
+                ),
+                shape = RoundedCornerShape(20.dp),
+                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
+                modifier = modifier.height(36.dp)
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_volume_up),
+                        contentDescription = stringResource(R.string.recipe_audio_error),
+                        tint = Color(0xFFC62828),
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Text(
+                        text = "Retry",
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color(0xFFC62828)
+                    )
+                }
+            }
+        }
     }
 }
 

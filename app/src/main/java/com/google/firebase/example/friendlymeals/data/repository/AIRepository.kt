@@ -50,6 +50,10 @@ class AIRepository @Inject constructor(
         return aiRemoteDataSource.generateSpeech(text)
     }
 
+    suspend fun generateInstructionsSpeech(instructions: String): ByteArray? {
+        return aiRemoteDataSource.generateInstructionsSpeech(instructions)
+    }
+
     suspend fun loadOnDeviceModel() {
         aiRemoteDataSource.loadOnDeviceModel()
     }
