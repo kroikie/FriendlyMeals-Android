@@ -1,16 +1,16 @@
 # FriendlyMeals – Firebase Android Samples (ADS '26 Showcase Fork)
 
 [![Firebase Agent Skills](https://img.shields.io/badge/Built%20with-Firebase%20Agent%20Skills-FFCA28?logo=firebase&logoColor=black)](https://firebase.google.com/docs/ai-assistance/agent-skills)
-[![Coding Agent](https://img.shields.io/badge/Coding%20Agent-Gemini-4285F4?logo=googlegemini&logoColor=white)](https://firebase.google.com/docs/ai-assistance/agent-skills)
+[![Built with Antigravity](https://img.shields.io/badge/Built%20with-Antigravity-4285F4?logo=google&logoColor=white)](https://antigravity.google)
 
 Welcome to **FriendlyMeals**, an Android sample demonstrating end-to-end **Firebase AI Logic**, **Hybrid On-Device Inference**, **Firestore Enterprise**, **Remote Config**, **Cloud Storage**, and **Firebase App Check** in Jetpack Compose.
 
 > [!IMPORTANT]
 > **Fork Highlights (`kroikie/FriendlyMeals-Android`)**: This fork extends [`FirebaseExtended/FriendlyMeals-Android`](https://github.com/FirebaseExtended/FriendlyMeals-Android) with features built and demonstrated for **Android Developer Summit (ADS '26)** — including **hands-free Recipe Instructions Text-to-Speech (TTS)** with raw PCM-to-WAV synthesis and playback controls, **strict on-device Gemini Nano inference (`ONLY_ON_DEVICE`)**, unit tests, and declarative **Firestore & Cloud Storage Security Rules**.
 
-## 🤖 Built with Gemini & Firebase Agent Skills
+## 🤖 Built with Antigravity & Firebase Agent Skills
 
-The ADS '26 enhancements in this fork were built with **Gemini** as the AI coding agent, equipped with **[Firebase Agent Skills](https://firebase.google.com/docs/ai-assistance/agent-skills)** (`firebase-ai-logic`, `firebase-remote-config-basics`, `firebase-firestore`, and `firebase-security-rules-auditor`) to ground code generation in current Firebase SDK patterns, multimodal `ResponseModality.AUDIO` APIs, and production Security Rules best practices.
+The ADS '26 enhancements in this fork were built in **[Google Antigravity](https://antigravity.google)** powered by Gemini and equipped with **[Firebase Agent Skills](https://firebase.google.com/docs/ai-assistance/agent-skills)** (`firebase-ai-logic`, `firebase-remote-config-basics`, `firebase-firestore`, and `firebase-security-rules-auditor`) to ground code generation in current Firebase SDK patterns, multimodal `ResponseModality.AUDIO` APIs, and production Security Rules best practices.
 
 👉 **Learn how to install and use Firebase Agent Skills in your coding agent:**  
 **[https://firebase.google.com/docs/ai-assistance/agent-skills](https://firebase.google.com/docs/ai-assistance/agent-skills)**
