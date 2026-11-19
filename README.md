@@ -1,14 +1,30 @@
 # FriendlyMeals – Firebase Android Samples (ADS '26 Showcase Fork)
 
-[![Firebase Agent Skills](https://img.shields.io/badge/Built%20with-Firebase%20Agent%20Skills-FFCA28?logo=firebase&logoColor=black)](https://firebase.google.com/docs/ai-assistance/agent-skills)
-[![Built with Antigravity](https://img.shields.io/badge/Built%20with-Antigravity-4285F4?logo=google&logoColor=white)](https://antigravity.google)
+<p align="left">
+  <strong>Built with</strong>&nbsp;&nbsp;&nbsp;
+  <a href="https://antigravity.google">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset=".github/assets/antigravity-lockup-dark.svg">
+      <source media="(prefers-color-scheme: light)" srcset=".github/assets/antigravity-lockup-light.svg">
+      <img alt="Google Antigravity" src=".github/assets/antigravity-lockup-light.svg" height="26" align="absmiddle">
+    </picture>
+  </a>
+  &nbsp;&nbsp;&plus;&nbsp;&nbsp;
+  <a href="https://firebase.google.com/docs/ai-assistance/agent-skills">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset=".github/assets/firebase-lockup-dark.svg">
+      <source media="(prefers-color-scheme: light)" srcset=".github/assets/firebase-lockup-light.svg">
+      <img alt="Firebase" src=".github/assets/firebase-lockup-light.svg" height="32" align="absmiddle">
+    </picture>
+  </a>
+</p>
 
 Welcome to **FriendlyMeals**, an Android sample demonstrating end-to-end **Firebase AI Logic**, **Hybrid On-Device Inference**, **Firestore Enterprise**, **Remote Config**, **Cloud Storage**, and **Firebase App Check** in Jetpack Compose.
 
 > [!IMPORTANT]
 > **Fork Highlights (`kroikie/FriendlyMeals-Android`)**: This fork extends [`FirebaseExtended/FriendlyMeals-Android`](https://github.com/FirebaseExtended/FriendlyMeals-Android) with features built and demonstrated for **Android Developer Summit (ADS '26)** — including **hands-free Recipe Instructions Text-to-Speech (TTS)** with raw PCM-to-WAV synthesis and playback controls, **strict on-device Gemini Nano inference (`ONLY_ON_DEVICE`)**, unit tests, and declarative **Firestore & Cloud Storage Security Rules**.
 
-## 🤖 Built with Antigravity & Firebase Agent Skills
+## <img src=".github/assets/antigravity-icon.svg" height="24" align="absmiddle" alt="Antigravity" /> Built with Antigravity & <img src=".github/assets/firebase-logomark.svg" height="24" align="absmiddle" alt="Firebase" /> Firebase Agent Skills
 
 The ADS '26 enhancements in this fork were built in **[Google Antigravity](https://antigravity.google)** powered by Gemini and equipped with **[Firebase Agent Skills](https://firebase.google.com/docs/ai-assistance/agent-skills)** (`firebase-ai-logic`, `firebase-remote-config-basics`, `firebase-firestore`, and `firebase-security-rules-auditor`) to ground code generation in current Firebase SDK patterns, multimodal `ResponseModality.AUDIO` APIs, and production Security Rules best practices.
 
